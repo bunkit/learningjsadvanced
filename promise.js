@@ -57,3 +57,26 @@ Promise.all([product, productDetail])
         console.log(detail)
     })
 
+
+const tryPromise = (time) => {
+    return new Promise((res, rej) => {
+        if (time <= 90000) {
+            setTimeout(() => {
+                res('Complete')
+            }, time)
+        } else {
+            rej('To loong')
+        }
+    })
+}
+
+const tryAsync = async () => {
+    try {
+        const test = await tryPromise(8000)
+        console.log(test)
+    } catch (err) {
+        console.error(err)
+    } finally {
+        console.log('tesst')
+    }
+}

@@ -64,9 +64,18 @@ const spinner = (state, parent = '.spinner') => {
 }
 const getMovies = ((keyword, param = 's') => {
     return fetch(`http://www.omdbapi.com/?apikey=50eeb9b2&` + param + `=` + keyword)
-        .then(data => data.json())
-        .then(response => response)
+        .then(dataResponse => {
+            if(!dataResponse.ok)
+                throw new Error(dataResponse.statusText)
+            return dataResponse.json()
+        })
+        .then(response => {
+            if(response.Response === 'False')
+                throw new Error(response.Error)
+            return response
+        })
         .catch(e => {
+            alert(e)
             return e
         })
 })
@@ -86,12 +95,11 @@ const onClickDetail = () => {
 }
 
 const updateUi = (promise) => {
-    spinner(false)
-    if (promise.Response === 'False')
-        return false
-    const data = promise.Search
-    const movieList = data.map((item, idx) => template(item, idx)).join('');
-    document.querySelector('.list-data').innerHTML = movieList;
+    if (promise.Response !== 'False') {
+        const data = promise.Search
+        const movieList = data.map((item, idx) => template(item, idx)).join('');
+        document.querySelector('.list-data').innerHTML = movieList;
+    }
 }
 
 const inputSearch = document.querySelector('.searchMovie')
@@ -100,35 +108,15 @@ const onChangeSearch = inputSearch.addEventListener('keyup', async function () {
     clearTimeout(interval)
     let keyword = this.value;
     interval = setTimeout(async () => {
-        spinner(true);
-        const movies = await getMovies(keyword, 's')
-        updateUi(movies)
-        onClickDetail()
+        try {
+            spinner(true);
+            const movies = await getMovies(keyword, 's')
+            updateUi(movies)
+            onClickDetail()
+            spinner(false)
+        } catch(err) {
+            console.error(err)
+        }
     }, 500)
 
 })
-
-const tryPromise = (time) => {
-    return new Promise((res, rej) => {
-        if (time <= 90000) {
-            setTimeout(() => {
-                res('Complete')
-            }, time)
-        } else {
-            rej('To loong')
-        }
-    })
-}
-
-const tryAsync = async () => {
-    try {
-        const test = await tryPromise(8000)
-        console.log(test)
-    } catch (err) {
-        console.error(err)
-    } finally {
-        console.log('tesst')
-    }
-}
-
-tryAsync()
